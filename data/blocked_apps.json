@@ -1,6 +1,14 @@
 [
   {
+    "name": "ULTRAKILL",
+    "path": "D:\\Apps\\Ultrakill\\ULTRAKILL.exe",
+    "sha256": "49230b2c1f1c470b157923481daaca15b2a64ef8275e3a731e0cd89769a8d5db",
+    "original_name": "ULTRAKILL.exe"
+  },
+  {
     "name": "Notepad",
-    "path": "C:\\Windows\\System32\\notepad.exe"
+    "path": "C:\\Windows\\System32\\notepad.exe",
+    "original_name": "notepad.exe",
+    "sha256": "da5807bb0997cc6b5132950ec87eda2b33b1ac4533cf1f7a22a6f3b576ed7c5b"
   }
 ]

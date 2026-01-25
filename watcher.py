@@ -1,28 +1,73 @@
 import psutil
 import time
-from gate import trigger_gate
-from unlock_state import is_unlocked
-from config import CHECK_INTERVAL_MS
+import traceback
 
-def watch(blocked_apps):
-    blocked = {app["path"].lower() for app in blocked_apps}
+from gate import trigger_gate
+from unlock_state import is_unlocked, cleanup_dead_processes
+from config import CHECK_INTERVAL_MS
+from fingerprint import sha256_of_file, get_original_filename
+
+
+def watch(blocked_apps, enabled_flag):
+    print("[Watcher] started")
+
+    blocked_hashes = set()
+    blocked_original_names = set()
+
+    for app in blocked_apps:
+        if app.get("sha256"):
+            blocked_hashes.add(app["sha256"].lower())
+
+        if app.get("original_name"):
+            blocked_original_names.add(app["original_name"].lower())
+
+    print("[Watcher] hashes:", blocked_hashes)
+    print("[Watcher] original names:", blocked_original_names)
 
     while True:
-        for proc in psutil.process_iter(["exe"]):
-            try:
-                exe = proc.info["exe"]
-                if not exe:
+        try:
+            if not enabled_flag.is_set():
+                time.sleep(0.2)
+                continue
+
+            print("[Watcher] tick")
+            cleanup_dead_processes()
+
+            for proc in psutil.process_iter(["exe"]):
+                try:
+                    exe = proc.info["exe"]
+                    if not exe:
+                        continue
+
+                    exe_l = exe.lower()
+
+                    if is_unlocked(exe_l, proc.pid):
+                        print("ALLOW", exe_l, proc.pid)
+                        continue
+
+                    # 🔹 rename detection
+                    original = get_original_filename(exe_l)
+                    if original and original.lower() in blocked_original_names:
+                        print("[BLOCKED] rename match:", exe)
+                        proc.kill()
+                        trigger_gate(exe)
+                        continue
+
+                    # 🔹 hash detection
+                    if blocked_hashes:
+                        sha = sha256_of_file(exe_l, cache=True)
+                        if sha and sha.lower() in blocked_hashes:
+                            print("[BLOCKED] hash match:", exe)
+                            proc.kill()
+                            trigger_gate(exe)
+
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
 
-                exe_l = exe.lower()
+            # ✅ correct sleep
+            time.sleep(CHECK_INTERVAL_MS / 1000)
 
-                if exe_l in blocked:
-                    if is_unlocked(exe_l):
-                        continue  # let it live
-
-                    proc.kill()
-                    trigger_gate(exe)
-            except Exception:
-                pass
-
-        time.sleep(CHECK_INTERVAL_MS / 1000)
+        except Exception:
+            print("[Watcher] CRASH — restarting loop")
+            traceback.print_exc()
+            time.sleep(1)
