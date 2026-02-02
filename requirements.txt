@@ -1,3 +1,3 @@
-PySide6
+PySide6>=6.5
 psutil
 pefile

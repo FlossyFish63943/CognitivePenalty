@@ -16,6 +16,7 @@ This project is intentionally minimal, opinionated, and difficult to bypass thro
 - 🪶 Lightweight polling-based watcher
 - 🧊 Persistent hash cache to avoid CPU abuse
 - 🧪 Rename & path spoofing resistance
+- 🧩 System tray UI with configuration window
 
 ---
 
@@ -42,11 +43,11 @@ This project is intentionally minimal, opinionated, and difficult to bypass thro
 
 ## 🔧 Configuration (IMPORTANT)
 
-At the moment (**v0.1**), blocked applications must be added **manually**.
+Blocked applications can be managed through the system tray **Settings** window.
 
 ### 📂 `data/blocked_apps.json`
 
-You must specify the **full absolute path** to the executable you want to block.
+You can still edit this file directly if needed. Each entry needs the **full absolute path** to the executable you want to block.
 
 Example:
 
@@ -79,6 +80,14 @@ python main.py
 
 Once running, CognitivePenalty stays in the background and watches for restricted apps.
 
+### Headless mode (no UI)
+
+If you need to run without a GUI (for example, on a headless Linux environment), set:
+
+```bash
+CP_HEADLESS=1 python main.py
+```
+
 ---
 
 ## 📂 Project Structure
@@ -107,8 +116,6 @@ CognitivePenalty/
 
 ## ⚠️ Known Limitations (v0.1)
 
-- No system tray UI yet
-- Manual configuration required
 - Windows-only
 - No installer or auto-start
 

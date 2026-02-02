@@ -5,6 +5,7 @@ from PySide6.QtCore import QObject, Signal
 
 class TrayController(QObject):
     toggle_requested = Signal(bool)
+    open_settings_requested = Signal()
     quit_requested = Signal()
 
     def __init__(self, icon_path=None):
@@ -23,9 +24,14 @@ class TrayController(QObject):
         self.enabled_action.setChecked(True)
         self.enabled_action.triggered.connect(self.toggle)
 
+        settings_action = QAction("Settings")
+        settings_action.triggered.connect(self.open_settings)
+
         quit_action = QAction("Quit")
         quit_action.triggered.connect(self.confirm_quit)
 
+        self.menu.addAction(settings_action)
+        self.menu.addSeparator()
         self.menu.addAction(self.enabled_action)
         self.menu.addSeparator()
         self.menu.addAction(quit_action)
@@ -35,6 +41,9 @@ class TrayController(QObject):
 
     def toggle(self, state):
         self.toggle_requested.emit(state)
+
+    def open_settings(self):
+        self.open_settings_requested.emit()
 
     def confirm_quit(self):
         reply = QMessageBox.question(
